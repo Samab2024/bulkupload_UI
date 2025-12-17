@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, flash, jsonify, session, Response
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, flash, jsonify, session, Response # type: ignore
+from werkzeug.utils import secure_filename # type: ignore
 import os, threading, uuid, traceback
 from veracode_api_signing.plugin_requests import RequestsAuthPluginVeracodeHMAC as VeracodeHMAC
 from new_api import veracode_api_call as api_call
