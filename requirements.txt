@@ -1,0 +1,5 @@
+requests
+veracode_api_signing
+flask
+werkzeug
+fastapi

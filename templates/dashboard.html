@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Veracode Bulk Upload</title>
+    <style>
+        .info { color: green; }
+        .error { color: red; }
+        pre {
+            white-space: pre-wrap;
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+        }
+        #logSection { display: none; }
+    </style>
+</head>
+<body>
+
+<h2>Veracode Bulk Upload</h2>
+
+<!-- Upload Form -->
+<div id="formSection">
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label>Region (US/EU):</label><br>
+        <input type="text" name="region" required><br><br>
+
+        <label>API Key ID:</label><br>
+        <input type="text" name="api_id" required><br><br>
+
+        <label>API Key Secret:</label><br>
+        <input type="password" name="api_secret" required><br><br>
+
+        <label>CSV File:</label><br>
+        <input type="file" name="csv_file" accept=".csv" required><br><br>
+
+        <button type="submit">Start Upload</button>
+    </form>
+
+    <div id="error" style="color:red;"></div>
+</div>
+
+<!-- Logs -->
+<div id="logSection">
+    <h3>Upload Logs (Live)</h3>
+    <pre id="logArea"></pre>
+    <a id="downloadLink" href="#">Download Log</a> |
+    <a href="/dashboard">Start New Upload</a>
+</div>
+
+<script>
+let sessionId = null;
+let logTimer = null;
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const response = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        document.getElementById('error').innerText = 'Upload failed';
+        return;
+    }
+
+    const data = await response.json();
+    sessionId = data.session_id;
+
+    // Switch UI
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('logSection').style.display = 'block';
+    document.getElementById('downloadLink').href =
+        `/download_logs/${sessionId}`;
+
+    startLogPolling();
+});
+
+function startLogPolling() {
+    logTimer = setInterval(fetchLogs, 1000);
+}
+
+async function fetchLogs() {
+    if (!sessionId) return;
+
+    const response = await fetch(`/get_logs/${sessionId}`);
+    const logs = await response.json();
+    const logArea = document.getElementById('logArea');
+
+    logArea.innerHTML = '';
+    logs.forEach(log => {
+        const span = document.createElement('span');
+        span.textContent = log.msg + '\n';
+        span.className = log.type;
+        logArea.appendChild(span);
+    });
+
+    logArea.scrollTop = logArea.scrollHeight;
+}
+</script>
+
+</body>
+</html>
